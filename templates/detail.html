@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<!-- Mahsulot bo‘limi -->
+<section class="py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="row gx-4 gx-lg-5 align-items-center">
+            <div class="col-md-6">
+                <img class="card-img-top mb-5 mb-md-0"
+                     src="{{ product.image.url }}" alt="{{ product.name }}"></div>
+
+                    <div class="col-md-6">
+                        <div class="small mb-1 d-flex flex-row gap-2 align-items-center">
+                            Reyting:
+                            <div class="d-flex small text-warning">
+                                {% for star in '12345' %}
+                                    {% if product.rating|default:0 >= star|add:"0" %}
+                                        <div class="bi-star-fill"></div>
+                                    {% else %}
+                                        <div class="bi-star"></div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <h1 class="display-5 fw-bolder">{{ product.name }}</h1>
+                        <div class="fs-5 mb-5">
+                            <span class="text-decoration-line-through text-muted">${{ product.old_price|intcomma }}</span>
+                            -
+                            <span>${{ product.new_price }}</span>
+                        </div>
+                        <p class="lead">
+                            {{ product.description|linebreaksbr|truncatechars:100 }}
+                        </p>
+                        <div class="d-flex w-100">
+                            <form action="{% url 'add_to_cart' product_id=product.id %}" method="post" class="w-100">
+                                {% csrf_token %}
+                                <input id="product-id" type="hidden" name="product_id" value="{{ product.id }}">
+                                <input id="product-quantity" type="hidden" name="quantity" value="1">
+                                <div class="d-flex flex-column w-100">
+                                    {% if not request.user.is_authenticated %}
+                                        <b>
+                                            Iltimos, <a href="{% url 'login' %}?next=/detail/{{ product.id }}/">hisobingizga kiring</a> mahsulotni savatchaga qo‘shish uchun
+                                        </b>
+                                    {% else %}
+                                        <div class="d-flex align-items-center gap-2 w-100">
+                                            <button id="decrement-btn" type="button" class="btn btn-secondary" style="width: 17.5%;">-</button>
+                                            <p id="quantity" class="m-0 border border-secondary py-2 px-4 rounded">1</p>
+                                            <button id="increment-btn" type="button" class="btn btn-secondary" style="width: 17.5%;">+</button>
+                                        </div>
+                                        <button id="add-to-cart" type="submit" class="mt-1 btn btn-success w-50">Savatchaga qo‘shish</button>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container mt-4 mb-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-center">
+                        {% if product.comment_set.all %}
+                            <h2>So‘nggi izohlar</h2>
+                        {% endif %}
+                    </div>
+
+                    {% for comment in last_3_comments %}
+                        <div class="media card p-4 mt-2" id="comments-section">
+                            <div class="media-body">
+                            <h3 class="mt-0">{{ comment.owner.first_name }} {{ comment.owner.last_name }}</h3>
+                            <p>{{ comment.body|linebreaksbr }}</p>
+                            <b>
+                                <small class="text-muted">{{ comment.created|timesince }} oldin</small>
+                            </b>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <h3 class="text-muted text-center">Hozircha izohlar yo‘q 🙃</h3>
+                    {% endfor %}
+                </div>
+
+                {% if request.user.is_authenticated %}
+                    <div class="col-8 offset-2 mt-5">
+                        <div class="p-5">
+                            <div class="text-center">
+                                <h3>Izoh qoldiring</h3>
+                            </div>
+                            <form method="post" action="">
+                                {% csrf_token %}
+                                <div class="form-group mb-3">
+                                    <label for="formGroupExampleInput2">Sizning izohingiz</label>
+                                    {{ form.as_p }}
+                                </div>
+
+                                <div class="form-group mb-3 d-flex">
+                                    <input type="submit" class="btn btn-lg btn-success w-100" value="Yuborish">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <h3 class="text-center mt-3">
+                        <a href="{% url 'login' %}">Hisobingizga kiring</a> izoh qoldirish uchun
+                    </h3>
+                {% endif %}
+            </div>
+        </div>
+
+        <script>
+            // Mahsulot miqdorini oshirish/pasaytirish
+            const incrementBtn = document.getElementById('increment-btn');
+            const decrementBtn = document.getElementById('decrement-btn');
+            const quantity = document.getElementById('quantity');
+
+            incrementBtn.addEventListener('click', () => {
+                quantity.textContent = Number(document.getElementById('quantity').textContent) + 1
+                document.getElementById('product-quantity').value = Number(document.getElementById('quantity').textContent)
+            })
+
+            decrementBtn.addEventListener('click', () => {
+                if (Number(document.getElementById('quantity').textContent) > 1) {
+                    quantity.innerHTML = Number(document.getElementById('quantity').textContent) - 1
+                    document.getElementById('product-quantity').value = Number(document.getElementById('quantity').textContent)
+                }
+            })
+        </script>
+{% endblock content %}
