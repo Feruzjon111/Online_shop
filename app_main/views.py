@@ -36,7 +36,7 @@ def home_page(request):
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
-    # Formani faqat POST so‘rovida qayta ishlash
+
     if request.method == 'POST' and request.user.is_authenticated:
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -48,10 +48,9 @@ def product_detail(request, product_id):
     else:
         form = CommentForm()  # Bo‘sh forma (POST bo‘lmasa)
 
-    # So‘nggi 5 ta izohni olish
     last_3_comments = product.comment_set.all().order_by('-created')[:5]
 
-    # Kontekstga izohlar va forma qo‘shish
+
     context = {
         'product': product,
         'last_3_comments': last_3_comments,
